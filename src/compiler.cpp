@@ -67,6 +67,14 @@ int compile_to_cpp(std::string filename) {
                 std::string bol_val = content.substr(slash + 1);
                 cpp_file << "bool " << bol_name << " = " << bol_val << ";\n";
             }
+        } else if (content.find("str/") == 0) {
+            content.erase(0, 4);
+            size_t slash = content.find('/');
+            if (slash != std::string::npos) {
+                std::string str_name = content.substr(0, slash);
+                std::string str_val = content.substr(slash + 1);
+                cpp_file << "std::string " << str_val << " = \"" << str_val << "\";\n";
+            }
         }
     }
     cpp_file << "return 0;\n}\n";
