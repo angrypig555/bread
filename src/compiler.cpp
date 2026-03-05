@@ -47,6 +47,8 @@ int compile_cpp(std::string filepath) {
     return 0;
 }
 
+
+
 int compile_to_cpp(std::string filename) {
     std::ifstream breadfile;
     std::ofstream cpp_file;
@@ -92,6 +94,12 @@ int compile_to_cpp(std::string filename) {
             if (slash != std::string::npos) {
                 std::string int_name = content.substr(0, slash);
                 std::string int_val = content.substr(slash + 1);
+                 int is_int = all_of(int_val.begin(), int_val.end(), ::isdigit);
+                if (!is_int) {
+                    std::cerr << "an integer can only be a number!" << std::endl;
+                    throw 500;
+                    return 1;
+                }
                 cpp_file << "int " << int_name << " = " << int_val << ";\n";
                 integer_names.push_back(int_name);
             }
