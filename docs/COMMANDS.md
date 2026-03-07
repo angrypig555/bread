@@ -8,7 +8,7 @@ In bread, every integer, boolean and string must be defined before being used.
 `int/foo/5` - Define an integer (example: foo with the value of 5)
 `bol/foo/true` - define a boolean (example: foo = true) When printing booleans, they will be displayed as 0 or 1 based on if its false or true.
 `str/foo/bar` - define a string (example: foo = bar)
-`in/foo` - get an input from the user that will be stored in a string (example: input will be stored in foo)
+`in/foo` - get an input from the user that will be stored in a string (example: input will be stored in foo) If an input string has not been already defined, one will be defined for you.
 
 To initialize an empty variable of any kind, define it without any value and dont put a slash next to it.
 
@@ -36,6 +36,15 @@ while/foo/true
     bol/foo/false
 endwhile/
 ```
+
+## Mathematics
+There are 4 basic maths functions, which are:
+- `add/foo/4` - Addition. Example: Adds 4 to foo
+- `sub/foo/4` - Subtraction. Example: Substracts 4 from foo
+- `mul/foo/4` - Multiplication. Example: Multiplies foo by 4
+- `div/foo/4` - Division. Example: Divides foo by 4
+These are only just examples, but the numbers can be replaced with an integer.
+
 
 ## Functions?
 ## SHORTCUTS TO BE IMPLEMENTED SOON!

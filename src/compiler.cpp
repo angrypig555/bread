@@ -238,6 +238,146 @@ int compile_to_cpp(std::string filename) {
             }   
         } else if (content.find("endwhile/") == 0) {
             cpp_file << "}\n";
+        } else if (content.find("add/") == 0) {
+            content.erase(0, 4);
+            size_t slash1 = content.find('/');
+            if (slash1 == std::string::npos) {
+                std::cerr << "addition missing a slash!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            std::string variable1 = content.substr(0, slash1);
+            std::string variable2 = content.substr(slash1 + 1);
+            if (variable2.empty()) {
+                std::cerr << "cannot add nothing to an integer!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
+            if (int_it == integer_names.end()) {
+                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
+            if (int2_it != integer_names.end()) {
+                cpp_file << variable1 << " += " << variable2 << ";\n";
+            } else {
+                int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
+                if (!is_int) {
+                    std::cerr << "only numbers can be added to an integer!" << std::endl;
+                    throw 500;
+                    return 1;
+                } else {
+                    cpp_file << variable1 << " += " << variable2 << ";\n";
+                }
+            }
+        } else if (content.find("sub/") == 0) {
+            content.erase(0, 4);
+            size_t slash1 = content.find('/');
+            if (slash1 == std::string::npos) {
+                std::cerr << "subtraction missing a slash!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            std::string variable1 = content.substr(0, slash1);
+            std::string variable2 = content.substr(slash1 + 1);
+            if (variable2.empty()) {
+                std::cerr << "cannot subtract nothing from an integer!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
+            if (int_it == integer_names.end()) {
+                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
+            if (int2_it != integer_names.end()) {
+                cpp_file << variable1 << " -= " << variable2 << ";\n";
+            } else {
+                int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
+                if (!is_int) {
+                    std::cerr << "only numbers can be subtracted an integer!" << std::endl;
+                    throw 500;
+                    return 1;
+                } else {
+                    cpp_file << variable1 << " -= " << variable2 << ";\n";
+                }
+            }
+        } else if (content.find("mul/") == 0) {
+            content.erase(0, 4);
+            size_t slash1 = content.find('/');
+            if (slash1 == std::string::npos) {
+                std::cerr << "multiplication missing a slash!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            std::string variable1 = content.substr(0, slash1);
+            std::string variable2 = content.substr(slash1 + 1);
+            if (variable2.empty()) {
+                std::cerr << "cannot multiply an integer by nothing!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
+            if (int_it == integer_names.end()) {
+                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
+            if (int2_it != integer_names.end()) {
+                cpp_file << variable1 << " *= " << variable2 << ";\n";
+            } else {
+                int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
+                if (!is_int) {
+                    std::cerr << "only numbers can multiply an integer!" << std::endl;
+                    throw 500;
+                    return 1;
+                } else {
+                    cpp_file << variable1 << " *= " << variable2 << ";\n";
+                }
+            }
+        } else if (content.find("div/") == 0) {
+            content.erase(0, 4);
+            size_t slash1 = content.find('/');
+            if (slash1 == std::string::npos) {
+                std::cerr << "division missing a slash!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            std::string variable1 = content.substr(0, slash1);
+            std::string variable2 = content.substr(slash1 + 1);
+            if (variable2.empty()) {
+                std::cerr << "cannot divide by nothing!" << std::endl;
+                throw 500;
+                return 1;
+            } else if (variable2 == "0") {
+                std::cerr << "cannot divide by zero!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
+            if (int_it == integer_names.end()) {
+                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                throw 500;
+                return 1;
+            }
+            auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
+            if (int2_it != integer_names.end()) {
+                cpp_file << variable1 << " /= " << variable2 << ";\n";
+            } else {
+                int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
+                if (!is_int) {
+                    std::cerr << "only numbers can divide an integer!" << std::endl;
+                    throw 500;
+                    return 1;
+                } else {
+                    cpp_file << variable1 << " /= " << variable2 << ";\n";
+                }
+            }
         } else {
             std::cerr << "invalid command: " << content << std::endl;
             throw 500;
