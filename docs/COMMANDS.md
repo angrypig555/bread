@@ -44,7 +44,8 @@ There are 4 basic maths functions, which are:
 - `mul/foo/4` - Multiplication. Example: Multiplies foo by 4
 - `div/foo/4` - Division. Example: Divides foo by 4
 These are only just examples, but the numbers can be replaced with an integer.
-
+Other maths functions:
+- `mod/foo/4` - TO BE IMPLEMENTED
 
 ## Other functions
 - `wait/5` - Stop the program for X second (5 for example)
