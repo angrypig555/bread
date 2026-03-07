@@ -108,7 +108,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 }
-                auto int_it = std::find(integer_names.begin(), integer_names.end(), content);
+                auto int_it = std::find(integer_names.begin(), integer_names.end(), int_name);
                 if (int_it != integer_names.end()) {
                     cpp_file << int_name << " = " << int_val << ";\n"; 
                 } else {
@@ -128,7 +128,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 }
-                auto bol_it = std::find(bool_names.begin(), bool_names.end(), content);
+                auto bol_it = std::find(bool_names.begin(), bool_names.end(), bol_name);
                 if (bol_it != bool_names.end()) {
                     cpp_file << bol_name << " = " << bol_val << ";\n";
                 } else {
@@ -142,7 +142,7 @@ int compile_to_cpp(std::string filename) {
             if (slash != std::string::npos) {
                 std::string str_name = content.substr(0, slash);
                 std::string str_val = content.substr(slash + 1);
-                auto str_it = std::find(string_names.begin(), string_names.end(), content);
+                auto str_it = std::find(string_names.begin(), string_names.end(), str_name);
                 if (str_it != string_names.end()) {
                     cpp_file << str_name << " = \"" << str_val << "\";\n";
                 } else {
@@ -186,6 +186,54 @@ int compile_to_cpp(std::string filename) {
             }
             cpp_file << "if (" << variable1 << " "<< condition << " " << variable2 << ") {\n";
         } else if (content.find("endif/") == 0) {
+            cpp_file << "}\n";
+        } else if (content.find("while/") == 0) {
+            content.erase(0, 6);
+            size_t slash1 = content.find('/');
+            size_t slash2 = content.find('/', slash1 + 1);
+            std::string variable = content.substr(0, slash1);
+            std::string condition = content.substr(slash1 + 1, slash2 - slash1 - 1);
+            std::string variable2 = content.substr(slash2 + 1);
+            int is_var_2_used = 0;
+            if (slash1 == std::string::npos) {
+                std::cerr << "missing slash in while loop!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            if (variable2 != "") {
+                is_var_2_used = 1;
+            }
+            if (condition != "true" && condition != "false" && condition != "greater" && condition != "less" && condition != "equals" && condition != "notequals") {
+                std::cerr << "a while loop can only take true, false, greater, less, equals, notequals as operators!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            if (condition == "greater" or condition == "less" or condition == "equals" or condition == "notequals") {
+                if (is_var_2_used == 0) {
+                    std::cerr << "a variable that contains the " << condition << " operator must have a second variable to compare it to" << std::endl;
+                    throw 500;
+                    return 1;
+                }
+            }
+            if (condition == "greater") {
+                condition = ">";
+            } else if (condition == "less") {
+                condition = "<";
+            } else if (condition == "equals") {
+                condition = "==";
+            } else if (condition == "notequals") {
+                condition = "!=";
+            } else if (condition == "true") {
+                condition = "== true";
+            } else if (condition == "false") {
+                condition = "== false";
+            }
+            if (is_var_2_used == 1) {
+                cpp_file << "while (" << variable << " " << condition << " " << variable2 << ") {\n";
+            } else {
+                cpp_file << "while (" << variable << " " << condition << ") {\n";
+            }   
+        } else if (content.find("endwhile/") == 0) {
             cpp_file << "}\n";
         }
     }
