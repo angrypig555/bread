@@ -1,8 +1,7 @@
 # The bread programming language commands
 
 Bread is transpiled into c++, and compiled from there with gcc
-In bread, every integer, boolean and string must be defined before being used and assigned a value of anything
-
+In bread, every integer, boolean and string must be defined before being used.
 ## Basic commands
 
 `print/Hello World!` - Prints hello world, No quotes required! If you want to print a string or integer or boolean, you just have to write the name of the string, boolean or integer.
@@ -28,6 +27,15 @@ endif/
 ```
 (note: tabs are optional)
 For now, all variables in an if statement have to be declared as a variable before it.
+
+## While statements
+To declare a while statement, you can use the built in while function like this:
+```
+while/foo/true
+    print/foo is true
+    bol/foo/false
+endwhile/
+```
 
 ## Functions?
 ## SHORTCUTS TO BE IMPLEMENTED SOON!

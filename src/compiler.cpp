@@ -108,8 +108,13 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 }
-                cpp_file << "int " << int_name << " = " << int_val << ";\n";
-                integer_names.push_back(int_name);
+                auto int_it = std::find(integer_names.begin(), integer_names.end(), content);
+                if (int_it != integer_names.end()) {
+                    cpp_file << int_name << " = " << int_val << ";\n"; 
+                } else {
+                    cpp_file << "int " << int_name << " = " << int_val << ";\n";
+                    integer_names.push_back(int_name);
+                }
             }
             
         } else if (content.find("bol/") == 0) {
@@ -123,8 +128,13 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 }
-                cpp_file << "bool " << bol_name << " = " << bol_val << ";\n";
-                bool_names.push_back(bol_name);
+                auto bol_it = std::find(bool_names.begin(), bool_names.end(), content);
+                if (bol_it != bool_names.end()) {
+                    cpp_file << bol_name << " = " << bol_val << ";\n";
+                } else {
+                    cpp_file << "bool " << bol_name << " = " << bol_val << ";\n";
+                    bool_names.push_back(bol_name);
+                }
             }
         } else if (content.find("str/") == 0) {
             content.erase(0, 4);
@@ -132,8 +142,13 @@ int compile_to_cpp(std::string filename) {
             if (slash != std::string::npos) {
                 std::string str_name = content.substr(0, slash);
                 std::string str_val = content.substr(slash + 1);
-                cpp_file << "std::string " << str_name << " = \"" << str_val << "\";\n";
-                string_names.push_back(str_name);
+                auto str_it = std::find(string_names.begin(), string_names.end(), content);
+                if (str_it != string_names.end()) {
+                    cpp_file << str_name << " = \"" << str_val << "\";\n";
+                } else {
+                    cpp_file << "std::string " << str_name << " = \"" << str_val << "\";\n";
+                    string_names.push_back(str_name);
+                }
             }
         } else if (content.find("in/") == 0) {
             content.erase(0, 3);
