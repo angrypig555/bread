@@ -45,18 +45,18 @@ There are 4 basic maths functions, which are:
 - `div/foo/4` - Division. Example: Divides foo by 4
 These are only just examples, but the numbers can be replaced with an integer.
 Other maths functions:
-- `mod/foo/4` - TO BE IMPLEMENTED SOON
+- `mod/foo/4` - Modulo. Example: Mod foo by 4
 
 ## Other functions
 - `wait/5` - Stop the program for X second (5 for example)
 
-## Functions?
-## SHORTCUTS TO BE IMPLEMENTED SOON!
+## Functions
 In bread, functions are shortcuts.
 Shortcuts always have to be defined at the top of the .bread file and must start with
 `shrtct/shortcutname`
 and end with
 `endshtrct/`
+Currently you cannot pass anything inside the shortcut, if you want to use a variable inside the shortcut you have to define it before using it in the shortcut or else it will only be local to that shortcut.
 You do not need to add tabs while defining what a shortcut does.
 Here is an example of a shortcut.
 ```
@@ -65,3 +65,11 @@ shrtct/foo
     int/ran/1
 endshrtct/
 ```
+A shortcut must be declared before being used.
+It can be used like this (in this example, foo is the shortcut name):
+```
+code...
+foo
+more code...
+```
+Shortcuts should not exit, if yes they will lead to errors while compiling.

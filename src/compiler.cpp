@@ -13,7 +13,7 @@ std::vector<std::string> file_contents;
 std::vector<std::string> integer_names;
 std::vector<std::string> string_names;
 std::vector<std::string> bool_names;
-
+std::vector<std::string> shortcut_names;
 
 int compiler; // 1 = gcc, 2 = clang, if both, clang will be preferred due to faster compile time
 
@@ -58,8 +58,11 @@ void trimwhtspc(std::string &string) {
 
 int compile_to_cpp(std::string filename) {
     std::ifstream breadfile;
-    std::ofstream cpp_file;
-
+    std::ofstream cpp_file_raw;
+    std::stringstream cpp_file;
+    std::stringstream func_stream; // needed so that the functions are outside main
+    std::ostream* curr_out = &cpp_file;
+    int is_in_func;
     breadfile.open(filename);
     if (!breadfile.is_open()) {
         std::cerr << "error opening file" << std::endl;
@@ -71,8 +74,8 @@ int compile_to_cpp(std::string filename) {
         file_contents.push_back(c);
     } // save file into vector
     breadfile.close();
-    cpp_file.open(cpp_dir);
-    if (!cpp_file.is_open()) {
+    cpp_file_raw.open(cpp_dir);
+    if (!cpp_file_raw.is_open()) {
         std::cerr << "error creating temporary cpp file" << std::endl;
         throw 500;
         return 1;
@@ -82,7 +85,8 @@ int compile_to_cpp(std::string filename) {
     //        content.erase(0,7);
     //    }
     //} todo: shortcuts
-    cpp_file << "#include<iostream>\n#include<chrono>\n#include<thread>\nint main() {\n";
+    cpp_file_raw << "#include<iostream>\n#include<chrono>\n#include<thread>\n";
+    *curr_out << "int main() {\n";
     for (std::string content : file_contents) {
         trimwhtspc(content); // needed if the user uses tabs
         if (content.empty()) { // checks if the line is empty, do not delete this function
@@ -94,9 +98,9 @@ int compile_to_cpp(std::string filename) {
             auto int_it = std::find(integer_names.begin(), integer_names.end(), content);
             auto bool_it = std::find(bool_names.begin(), bool_names.end(), content);
             if (string_it != string_names.end() or int_it != integer_names.end() or bool_it != bool_names.end()) {
-                cpp_file << "std::cout << " + content << " << std::endl;\n";
+                *curr_out << "std::cout << " + content << " << std::endl;\n";
             } else {
-                cpp_file << "std::cout << \"" << content << "\" << std::endl;\n";
+                *curr_out << "std::cout << \"" << content << "\" << std::endl;\n";
             }
             
         } else if (content.find("int/") == 0 ) {
@@ -113,9 +117,9 @@ int compile_to_cpp(std::string filename) {
                 }
                 auto int_it = std::find(integer_names.begin(), integer_names.end(), int_name);
                 if (int_it != integer_names.end()) {
-                    cpp_file << int_name << " = " << int_val << ";\n"; 
+                    *curr_out << int_name << " = " << int_val << ";\n"; 
                 } else {
-                    cpp_file << "int " << int_name << " = " << int_val << ";\n";
+                    *curr_out << "int " << int_name << " = " << int_val << ";\n";
                     integer_names.push_back(int_name);
                 }
             }
@@ -133,9 +137,9 @@ int compile_to_cpp(std::string filename) {
                 }
                 auto bol_it = std::find(bool_names.begin(), bool_names.end(), bol_name);
                 if (bol_it != bool_names.end()) {
-                    cpp_file << bol_name << " = " << bol_val << ";\n";
+                    *curr_out << bol_name << " = " << bol_val << ";\n";
                 } else {
-                    cpp_file << "bool " << bol_name << " = " << bol_val << ";\n";
+                    *curr_out << "bool " << bol_name << " = " << bol_val << ";\n";
                     bool_names.push_back(bol_name);
                 }
             }
@@ -147,9 +151,9 @@ int compile_to_cpp(std::string filename) {
                 std::string str_val = content.substr(slash + 1);
                 auto str_it = std::find(string_names.begin(), string_names.end(), str_name);
                 if (str_it != string_names.end()) {
-                    cpp_file << str_name << " = \"" << str_val << "\";\n";
+                    *curr_out << str_name << " = \"" << str_val << "\";\n";
                 } else {
-                    cpp_file << "std::string " << str_name << " = \"" << str_val << "\";\n";
+                    *curr_out << "std::string " << str_name << " = \"" << str_val << "\";\n";
                     string_names.push_back(str_name);
                 }
             }
@@ -157,10 +161,10 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 3);
             auto it = std::find(string_names.begin(), string_names.end(), content);
             if (it == string_names.end()) {
-                cpp_file << "std::string " << content << ";\n";
+                *curr_out << "std::string " << content << ";\n";
                 string_names.push_back(content);
             }
-            cpp_file << "std::cin >> " << content << ";\n";
+            *curr_out << "std::cin >> " << content << ";\n";
         } else if (content.find("exit/") == 0) {
             content.erase(0, 5);
             int is_int = all_of(content.begin(), content.end(), ::isdigit);
@@ -169,7 +173,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
             }
-            cpp_file << "return " << content << ";\n";
+            *curr_out << "return " << content << ";\n";
         } else if (content.find("if/") == 0) {
             content.erase(0, 3);
             size_t slash1 = content.find('/');
@@ -187,9 +191,9 @@ int compile_to_cpp(std::string filename) {
             } else if (condition == "notequals") {
                 condition = "!=";
             }
-            cpp_file << "if (" << variable1 << " "<< condition << " " << variable2 << ") {\n";
+            *curr_out << "if (" << variable1 << " "<< condition << " " << variable2 << ") {\n";
         } else if (content.find("endif/") == 0) {
-            cpp_file << "}\n";
+            *curr_out << "}\n";
         } else if (content.find("while/") == 0) {
             content.erase(0, 6);
             size_t slash1 = content.find('/');
@@ -232,12 +236,12 @@ int compile_to_cpp(std::string filename) {
                 condition = "== false";
             }
             if (is_var_2_used == 1) {
-                cpp_file << "while (" << variable << " " << condition << " " << variable2 << ") {\n";
+                *curr_out << "while (" << variable << " " << condition << " " << variable2 << ") {\n";
             } else {
-                cpp_file << "while (" << variable << " " << condition << ") {\n";
+                *curr_out << "while (" << variable << " " << condition << ") {\n";
             }   
         } else if (content.find("endwhile/") == 0) {
-            cpp_file << "}\n";
+            *curr_out << "}\n";
         } else if (content.find("add/") == 0) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
@@ -261,7 +265,7 @@ int compile_to_cpp(std::string filename) {
             }
             auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
             if (int2_it != integer_names.end()) {
-                cpp_file << variable1 << " += " << variable2 << ";\n";
+                *curr_out << variable1 << " += " << variable2 << ";\n";
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
@@ -269,7 +273,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << variable1 << " += " << variable2 << ";\n";
+                    *curr_out << variable1 << " += " << variable2 << ";\n";
                 }
             }
         } else if (content.find("sub/") == 0) {
@@ -295,7 +299,7 @@ int compile_to_cpp(std::string filename) {
             }
             auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
             if (int2_it != integer_names.end()) {
-                cpp_file << variable1 << " -= " << variable2 << ";\n";
+                *curr_out << variable1 << " -= " << variable2 << ";\n";
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
@@ -303,7 +307,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << variable1 << " -= " << variable2 << ";\n";
+                    *curr_out << variable1 << " -= " << variable2 << ";\n";
                 }
             }
         } else if (content.find("mul/") == 0) {
@@ -329,7 +333,7 @@ int compile_to_cpp(std::string filename) {
             }
             auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
             if (int2_it != integer_names.end()) {
-                cpp_file << variable1 << " *= " << variable2 << ";\n";
+                *curr_out << variable1 << " *= " << variable2 << ";\n";
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
@@ -337,7 +341,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << variable1 << " *= " << variable2 << ";\n";
+                    *curr_out << variable1 << " *= " << variable2 << ";\n";
                 }
             }
         } else if (content.find("div/") == 0) {
@@ -367,7 +371,7 @@ int compile_to_cpp(std::string filename) {
             }
             auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
             if (int2_it != integer_names.end()) {
-                cpp_file << variable1 << " /= " << variable2 << ";\n";
+                *curr_out << variable1 << " /= " << variable2 << ";\n";
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
@@ -375,7 +379,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << variable1 << " /= " << variable2 << ";\n";
+                    *curr_out << variable1 << " /= " << variable2 << ";\n";
                 }
             }
         } else if (content.find("mod/") == 0) {
@@ -405,7 +409,7 @@ int compile_to_cpp(std::string filename) {
             }
             auto int2_it = std::find(integer_names.begin(), integer_names.end(), variable2);
             if (int2_it != integer_names.end()) {
-                cpp_file << variable1 << " %= " << variable2 << ";\n";
+                *curr_out << variable1 << " %= " << variable2 << ";\n";
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
@@ -413,7 +417,7 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << variable1 << " %= " << variable2 << ";\n";
+                    *curr_out << variable1 << " %= " << variable2 << ";\n";
                 }
             }
         } else if (content.find("wait/") == 0) {
@@ -431,20 +435,40 @@ int compile_to_cpp(std::string filename) {
                     throw 500;
                     return 1;
                 } else {
-                    cpp_file << "std::this_thread::sleep_for(std::chrono::seconds(" << content << "));\n";
+                    *curr_out << "std::this_thread::sleep_for(std::chrono::seconds(" << content << "));\n";
                 }
             } else {
-                cpp_file << "std::this_thread::sleep_for(std::chrono::seconds(" << content << "));\n";
+                *curr_out << "std::this_thread::sleep_for(std::chrono::seconds(" << content << "));\n";
             }
             
+        } else if (content.find("shrtct/") == 0) {
+            content.erase(0, 7);
+            if (content == "") {
+                std::cerr << "a shortcut must have a name!" << std::endl;
+                throw 500;
+                return 1;
+            }
+            curr_out = &func_stream;
+            *curr_out << "void " << content << "() {\n";
+            shortcut_names.push_back(content);
+        } else if (content.find("endshrtct/") == 0) {
+            *curr_out << "}\n";
+            curr_out = &cpp_file;
         } else {
-            std::cerr << "invalid command: " << content << std::endl;
-            throw 500;
-            return 1;
+            auto shrtct_it = std::find(shortcut_names.begin(), shortcut_names.end(), content);
+            if (shrtct_it != shortcut_names.end()) {
+                *curr_out << content << "();\n";
+            } else {
+                std::cerr << "invalid command: " << content << std::endl;
+                throw 500;
+                return 1;
+            }
         }
     }
-    cpp_file << "return 0;\n}\n";
-    cpp_file.close();
+    *curr_out << "return 0;\n}\n";
+    cpp_file_raw << func_stream.str();
+    cpp_file_raw << cpp_file.str();
+    cpp_file_raw.close();
     compile_cpp(cpp_dir);
     return 0;
 }
