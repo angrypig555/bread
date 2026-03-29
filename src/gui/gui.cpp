@@ -6,16 +6,31 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
 
+std::string editor_text = "Bread Developer Suite";
+
+static int string_resize(ImGuiInputTextCallbackData* data) {
+    if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
+        std::string* str = (std::string*)data->UserData;
+        str->resize(data->BufTextLen);
+        data->Buf = (char*)str->c_str();
+    }
+    return 0;
+}
+
 int main() {
     try {
         create_tmp_dir_if_not_exist();
     } catch (int e) {
         return 1;
     }
-
+    try {
+        find_compiler();
+    } catch (int e) {
+        return 1;
+    }
     if (!glfwInit()) return 1;
     
-    GLFWwindow* window = glfwCreateWindow(400, 400, "Bread Developer Suite", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Bread Developer Suite", NULL, NULL);
     if (!window) return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -38,6 +53,14 @@ int main() {
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize);
         ImGui::Begin("Bread Developer Suite");
         ImGui::Text("Welcome to the Bread Developer Suite");
+        if (compiler == 2) {
+            ImGui::Text("Using compiler clang");
+        } else if (compiler == 1) {
+            ImGui::Text("Using compiler GCC");
+        }
+        ImGui::Text("Enter your program here:");
+        ImVec2 box_size = ImVec2(-1.0f, -1.0f);
+        ImGui::InputTextMultiline("##Editor", (char*)editor_text.c_str(), editor_text.capacity() + 1, box_size, ImGuiInputTextFlags_CallbackResize, string_resize, (void*)&editor_text);
         ImGui::End();
         ImGui::Render();
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
