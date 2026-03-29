@@ -5,6 +5,7 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
+#include "imguifd/ImGuiFileDialog.h"
 
 std::string editor_text = "Bread Developer Suite";
 
@@ -12,6 +13,9 @@ bool open_about;
 bool open_credits;
 bool open_load;
 bool open_save;
+
+std::string file_to_load;
+std::string file_to_save;
 
 static int string_resize(ImGuiInputTextCallbackData* data) {
     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
@@ -85,6 +89,34 @@ int main() {
             ImGui::OpenPopup("about_popup");
             open_about = false;
         }
+        if (open_credits == true) {
+            ImGui::OpenPopup("credits_popup");
+            open_credits = false;
+        }
+        if (open_load == true) {
+            IGFD::FileDialogConfig config;
+	        config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseBreadFile", "Choose File", ".bread", config);
+            if (ImGuiFileDialog::Instance()->Display("ChooseBreadFile")) {
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    file_to_load = ImGuiFileDialog::Instance()->GetFilePathName();
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
+            open_load = false;
+        }
+        if (open_save == true) {
+            IGFD::FileDialogConfig config;
+	        config.path = ".";
+            ImGuiFileDialog::Instance()->OpenDialog("ChooseBreadFileToSave", "Choose File", ".bread", config);
+            if (ImGuiFileDialog::Instance()->Display("ChooseBreadFileToSave")) {
+                if (ImGuiFileDialog::Instance()->IsOk()) {
+                    file_to_save = ImGuiFileDialog::Instance()->GetFilePathName();
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
+            open_save = false;
+        }
         if (ImGui::BeginPopupModal("about_popup", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::Text("Bread Developer Suite");
             ImGui::Text("Part of the bread compiler");
@@ -96,11 +128,21 @@ int main() {
             }
             ImGui::EndPopup();
         }
+        if (ImGui::BeginPopupModal("credits_popup", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Third Party Licenses\n Dear ImGui - MIT License Copyright (c) 2014-2024 Omar Cornut\n ImGui File Dialog - MIT License Copyright (c) 2018-2025 Stephane Cuillerdier (aka Aiekick)");
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
         ImGui::Text("Welcome to the Bread Developer Suite");
         if (compiler == 2) {
             ImGui::Text("Using compiler clang");
         } else if (compiler == 1) {
             ImGui::Text("Using compiler GCC");
+        }
+        if (ImGui::Button("Compile")) { // todo, implement this
+            std::cout << "to be implemented\n"; 
         }
         ImGui::Text("Enter your program here:");
         ImVec2 box_size = ImVec2(-1.0f, -1.0f);
