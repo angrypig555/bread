@@ -8,6 +8,11 @@
 
 std::string editor_text = "Bread Developer Suite";
 
+bool open_about;
+bool open_credits;
+bool open_load;
+bool open_save;
+
 static int string_resize(ImGuiInputTextCallbackData* data) {
     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize) {
         std::string* str = (std::string*)data->UserData;
@@ -51,7 +56,46 @@ int main() {
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->WorkPos);
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize);
-        ImGui::Begin("Bread Developer Suite");
+        ImGui::Begin("Bread Developer Suite", NULL, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("About")) {
+                if (ImGui::MenuItem("About")) {
+                    open_about = true;
+                }
+                if (ImGui::MenuItem("Credits")) {
+                    open_credits = true;
+                }
+                if (ImGui::MenuItem("Exit")) {
+                    break;
+                }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("Load")) {
+                    open_load = true;
+                }
+                if (ImGui::MenuItem("Save")) {
+                    open_save = true;
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
+        if (open_about == true) {
+            ImGui::OpenPopup("about_popup");
+            open_about = false;
+        }
+        if (ImGui::BeginPopupModal("about_popup", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+            ImGui::Text("Bread Developer Suite");
+            ImGui::Text("Part of the bread compiler");
+            ImGui::Text("Licensed under the MIT License, see license for more information");
+            ImGui::Text("The developer suite was made possible with external libraries, see credits for more info");
+            ImGui::Text("By angrypig555");
+            if (ImGui::Button("Close")) {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
         ImGui::Text("Welcome to the Bread Developer Suite");
         if (compiler == 2) {
             ImGui::Text("Using compiler clang");
