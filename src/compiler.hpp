@@ -16,6 +16,8 @@ extern std::vector<std::string> bool_names;
 extern std::vector<std::string> shortcut_names;
 extern int compiler;
 
+extern int line_count;
+
 int create_tmp_dir_if_not_exist();
 int compile_cpp(std::string filepath);
 void trimwhtspc(std::string &string);

@@ -18,6 +18,7 @@ std::vector<std::string> bool_names;
 std::vector<std::string> shortcut_names;
 
 int compiler; // 1 = gcc, 2 = clang, if both, clang will be preferred due to faster compile time
+int line_count;
 
 int create_tmp_dir_if_not_exist() {
     try {
@@ -82,14 +83,11 @@ int compile_to_cpp(std::string filename) {
         throw 500;
         return 1;
     }
-    //for (std::string content : file_contents) {
-    //    if (content.find("shrtct/")) {
-    //        content.erase(0,7);
-    //    }
-    //} todo: shortcuts
-    cpp_file_raw << "#include<iostream>\n#include<chrono>\n#include<thread>\n";
+    line_count = 0;
+    cpp_file_raw << "#include<iostream>\n#include<chrono>\n#include<thread>\n#include<filesystem>\n";
     *curr_out << "int main() {\n";
     for (std::string content : file_contents) {
+        line_count += 1; // used for showing where errors are
         trimwhtspc(content); // needed if the user uses tabs
         if (content.empty()) { // checks if the line is empty, do not delete this function
             continue;
@@ -105,6 +103,7 @@ int compile_to_cpp(std::string filename) {
                 *curr_out << "std::cout << \"" << content << "\" << std::endl;\n";
             }
             
+            
         } else if (content.find("int/") == 0 ) {
             content.erase(0, 4);
             size_t slash = content.find('/');
@@ -113,7 +112,7 @@ int compile_to_cpp(std::string filename) {
                 std::string int_val = content.substr(slash + 1);
                 int is_int = all_of(int_val.begin(), int_val.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "an integer can only be a number!" << std::endl;
+                    std::cerr << "an integer can only be a number! line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 }
@@ -125,6 +124,7 @@ int compile_to_cpp(std::string filename) {
                     integer_names.push_back(int_name);
                 }
             }
+
             
         } else if (content.find("bol/") == 0) {
             content.erase(0, 4);
@@ -133,7 +133,7 @@ int compile_to_cpp(std::string filename) {
                 std::string bol_name = content.substr(0, slash);
                 std::string bol_val = content.substr(slash + 1);
                 if (bol_val != "true" and bol_val != "false") {
-                    std::cerr << "booleans can only be true or false!\nexpected: true / false\ngot: " << bol_val << "\nfor " << bol_name << std::endl;
+                    std::cerr << "booleans can only be true or false!\nexpected: true / false\ngot: " << bol_val << "\nfor: " << bol_name << "\non line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 }
@@ -158,6 +158,10 @@ int compile_to_cpp(std::string filename) {
                     *curr_out << "std::string " << str_name << " = \"" << str_val << "\";\n";
                     string_names.push_back(str_name);
                 }
+            } else {
+                std::cerr << "a string must have a value! on line: " << line_count << std::endl;
+                throw 500;
+                return 1;
             }
         } else if (content.find("in/") == 0) {
             content.erase(0, 3);
@@ -171,7 +175,7 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 5);
             int is_int = all_of(content.begin(), content.end(), ::isdigit);
             if (!is_int) {
-                    std::cerr << "an exit code can only be a number!" << std::endl;
+                    std::cerr << "an exit code can only be a number! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
             }
@@ -184,7 +188,7 @@ int compile_to_cpp(std::string filename) {
             std::string condition = content.substr(slash1 + 1, slash2 - slash1 - 1);
             std::string variable2 = content.substr(slash2 + 1);
             if (condition != "equals" && condition != "notequals") {
-                std::cerr << "an if condition can only take equals or notequals as operators!" << std::endl;
+                std::cerr << "an if condition can only take equals or notequals as operators! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -205,7 +209,7 @@ int compile_to_cpp(std::string filename) {
             std::string variable2 = content.substr(slash2 + 1);
             int is_var_2_used = 0;
             if (slash1 == std::string::npos) {
-                std::cerr << "missing slash in while loop!" << std::endl;
+                std::cerr << "missing slash in while loop! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -213,13 +217,13 @@ int compile_to_cpp(std::string filename) {
                 is_var_2_used = 1;
             }
             if (condition != "true" && condition != "false" && condition != "greater" && condition != "less" && condition != "equals" && condition != "notequals") {
-                std::cerr << "a while loop can only take true, false, greater, less, equals, notequals as operators!" << std::endl;
+                std::cerr << "a while loop can only take true, false, greater, less, equals, notequals as operators! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             if (condition == "greater" or condition == "less" or condition == "equals" or condition == "notequals") {
                 if (is_var_2_used == 0) {
-                    std::cerr << "a variable that contains the " << condition << " operator must have a second variable to compare it to" << std::endl;
+                    std::cerr << "a variable that contains the " << condition << " operator must have a second variable to compare it to! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 }
@@ -248,20 +252,20 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
             if (slash1 == std::string::npos) {
-                std::cerr << "addition missing a slash!" << std::endl;
+                std::cerr << "addition missing a slash! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             std::string variable1 = content.substr(0, slash1);
             std::string variable2 = content.substr(slash1 + 1);
             if (variable2.empty()) {
-                std::cerr << "cannot add nothing to an integer!" << std::endl;
+                std::cerr << "cannot add nothing to an integer! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
             if (int_it == integer_names.end()) {
-                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                std::cerr << "integer " << variable1 << " not found. on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -271,7 +275,7 @@ int compile_to_cpp(std::string filename) {
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "only numbers can be added to an integer!" << std::endl;
+                    std::cerr << "only numbers can be added to an integer! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -282,20 +286,20 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
             if (slash1 == std::string::npos) {
-                std::cerr << "subtraction missing a slash!" << std::endl;
+                std::cerr << "subtraction missing a slash! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             std::string variable1 = content.substr(0, slash1);
             std::string variable2 = content.substr(slash1 + 1);
             if (variable2.empty()) {
-                std::cerr << "cannot subtract nothing from an integer!" << std::endl;
+                std::cerr << "cannot subtract nothing from an integer! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
             if (int_it == integer_names.end()) {
-                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                std::cerr << "integer " << variable1 << " not found. on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -305,7 +309,7 @@ int compile_to_cpp(std::string filename) {
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "only numbers can be subtracted an integer!" << std::endl;
+                    std::cerr << "only numbers can be subtracted an integer! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -316,20 +320,20 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
             if (slash1 == std::string::npos) {
-                std::cerr << "multiplication missing a slash!" << std::endl;
+                std::cerr << "multiplication missing a slash! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             std::string variable1 = content.substr(0, slash1);
             std::string variable2 = content.substr(slash1 + 1);
             if (variable2.empty()) {
-                std::cerr << "cannot multiply an integer by nothing!" << std::endl;
+                std::cerr << "cannot multiply an integer by nothing! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
             if (int_it == integer_names.end()) {
-                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                std::cerr << "integer " << variable1 << " not found. on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -339,7 +343,7 @@ int compile_to_cpp(std::string filename) {
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "only numbers can multiply an integer!" << std::endl;
+                    std::cerr << "only numbers can multiply an integer! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -350,24 +354,24 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
             if (slash1 == std::string::npos) {
-                std::cerr << "division missing a slash!" << std::endl;
+                std::cerr << "division missing a slash! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             std::string variable1 = content.substr(0, slash1);
             std::string variable2 = content.substr(slash1 + 1);
             if (variable2.empty()) {
-                std::cerr << "cannot divide by nothing!" << std::endl;
+                std::cerr << "cannot divide by nothing! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             } else if (variable2 == "0") {
-                std::cerr << "cannot divide by zero!" << std::endl;
+                std::cerr << "cannot divide by zero! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
             if (int_it == integer_names.end()) {
-                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                std::cerr << "integer " << variable1 << " not found. on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -377,7 +381,7 @@ int compile_to_cpp(std::string filename) {
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "only numbers can divide an integer!" << std::endl;
+                    std::cerr << "only numbers can divide an integer! on line: " << line_count <<  std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -388,24 +392,24 @@ int compile_to_cpp(std::string filename) {
             content.erase(0, 4);
             size_t slash1 = content.find('/');
             if (slash1 == std::string::npos) {
-                std::cerr << "mod missing a slash!" << std::endl;
+                std::cerr << "mod missing a slash! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             std::string variable1 = content.substr(0, slash1);
             std::string variable2 = content.substr(slash1 + 1);
             if (variable2.empty()) {
-                std::cerr << "cannot mod by nothing!" << std::endl;
+                std::cerr << "cannot mod by nothing! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             } else if (variable2 == "0") {
-                std::cerr << "cannot mod by zero!" << std::endl;
+                std::cerr << "cannot mod by zero! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
             auto int_it = std::find(integer_names.begin(), integer_names.end(), variable1);
             if (int_it == integer_names.end()) {
-                std::cerr << "integer " << variable1 << " not found." << std::endl;
+                std::cerr << "integer " << variable1 << " not found. on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -415,7 +419,7 @@ int compile_to_cpp(std::string filename) {
             } else {
                 int is_int = all_of(variable2.begin(), variable2.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "only numbers can mod an integer!" << std::endl;
+                    std::cerr << "only numbers can mod an integer! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -425,7 +429,7 @@ int compile_to_cpp(std::string filename) {
         } else if (content.find("wait/") == 0) {
             content.erase(0, 5);
             if (content == "") {
-                std::cerr << "wait function needs how many seconds to wait!" << std::endl;
+                std::cerr << "wait function needs how many seconds to wait! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -433,7 +437,7 @@ int compile_to_cpp(std::string filename) {
             if (int_it == integer_names.end()) {
                 int is_int = all_of(content.begin(), content.end(), ::isdigit);
                 if (!is_int) {
-                    std::cerr << "wait only takes numbers or integers as its parameter!" << std::endl;
+                    std::cerr << "wait only takes numbers or integers as its parameter! on line: " << line_count << std::endl;
                     throw 500;
                     return 1;
                 } else {
@@ -446,7 +450,7 @@ int compile_to_cpp(std::string filename) {
         } else if (content.find("shrtct/") == 0) {
             content.erase(0, 7);
             if (content == "") {
-                std::cerr << "a shortcut must have a name!" << std::endl;
+                std::cerr << "a shortcut must have a name! on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
@@ -456,12 +460,21 @@ int compile_to_cpp(std::string filename) {
         } else if (content.find("endshrtct/") == 0) {
             *curr_out << "}\n";
             curr_out = &cpp_file;
+        } else if (content.find("createdir/") == 0) {
+            content.erase(0, 10);
+            size_t slash = content.find("/");
+            if (slash == std::string::npos) {
+                std::cerr << "no slash found in createdir/ command! on line: " << line_count << std::endl;
+                throw 500;
+                return 1;
+            }
+
         } else {
             auto shrtct_it = std::find(shortcut_names.begin(), shortcut_names.end(), content);
             if (shrtct_it != shortcut_names.end()) {
                 *curr_out << content << "();\n";
             } else {
-                std::cerr << "invalid command: " << content << std::endl;
+                std::cerr << "invalid command: " << content << " on line: " << line_count << std::endl;
                 throw 500;
                 return 1;
             }
