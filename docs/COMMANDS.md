@@ -121,7 +121,5 @@ int/counter/0
 while/counter/equals/10
     print/counter
 
-    
-
     add/counter/1
 ```
