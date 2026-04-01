@@ -1,7 +1,7 @@
 # The bread programming language commands
 
 Bread is transpiled into c++, and compiled from there with gcc
-In bread, every integer, boolean and string must be defined before being used.
+In bread, every integer, boolean and string is global, meaning that it can be used in shortcuts and in the main program.
 ## Basic commands
 
 `print/Hello World!` - Prints hello world, No quotes required! If you want to print a string or integer or boolean, you just have to write the name of the string, boolean or integer.
@@ -46,6 +46,13 @@ There are 4 basic maths functions, which are:
 These are only just examples, but the numbers can be replaced with an integer.
 Other maths functions:
 - `mod/foo/4` - Modulo. Example: Mod foo by 4
+
+## Filesystem
+The variable name "path" is just an example here.
+- `createdir/path` - Creates a directory at a string called path. The path must be already defined with a string
+- `deletedir/path` - Deletes a directory at a string called path. The path must be already defined with a string and the selected folder must be empty.
+- `forcedeletedir/path` - Forcibly deletes a directory in a string called path, even if it's not empty
+Bread is only meant to create and delete paths, accesing files is currently not planned.
 
 ## Other functions
 - `wait/5` - Stop the program for X second (5 for example)
