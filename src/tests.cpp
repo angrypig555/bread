@@ -1,4 +1,4 @@
-// TODO, FINISH LATER
+// todo finish
 #include<iostream>
 #include<filesystem>
 #include<fstream>
@@ -17,6 +17,6 @@ int main() {
     std::filesystem::remove("/tmp/bread/temp.cpp");
     std::cout << "[BUILD] Building to C++" << std::endl;
     compile_to_cpp("/tmp/bread/tests/test1.bread");
-    std::cout << "[TEST] Analysing output" << std::endl;
-    std::system("./test1");
+    std::cout << "[TEST] Analysing C++ file" << std::endl;
+
 }

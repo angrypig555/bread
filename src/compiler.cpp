@@ -474,7 +474,7 @@ int compile_to_cpp(std::string filename) {
                 throw 500;
                 return 1;
             } else {
-                *curr_out << "try {\nstd::filesystem::create_directories(" << content << ");\n} catch (const fs::filesystem_error& e) {\nstd::cerr << \"Runtime Error!!! fs error at path: \" << e.path1().string();\nstd::cerr << \"Message: \" << e.code().message();\nstd::cerr << \"compiled with \" << version << \"\n\";\nreturn 1;\n";
+                *curr_out << "try {\nstd::filesystem::create_directories(" << content << ");\n} catch (const std::filesystem::filesystem_error& e) {\nstd::cerr << \"Runtime Error!!! fs error at path: \" << e.path1().string();\nstd::cerr << \" Message: \" << e.code().message();\nstd::cerr << \" compiled with \" << version << std::endl;\nreturn 1;\n}\n";
             }
 
         } else if (content.find("deletedir/") == 0) {
@@ -488,7 +488,21 @@ int compile_to_cpp(std::string filename) {
                 throw 500;
                 return 1;
             } else {
-                *curr_out << "std::filesystem::remove(" << content << ");\n";
+                *curr_out << "try {\nstd::filesystem::remove(" << content << ");\n} catch (const std::filesystem::filesystem_error& e) {\nstd::cerr << \"Runtime Error!!! fs error at path: \" << e.path1().string();\nstd::cerr << \" Message: \" << e.code().message();\nstd::cerr << \" compiled with \" << version << std::endl;\nreturn 1;\n}\n";
+            }
+
+        } else if (content.find("forcedeletedir/") == 0) {
+            content.erase(0, 15);
+            if (content == "") {
+                std::cerr << "path must be given to directory! on line: " << line_count << std::endl;
+            }
+            auto it = std::find(string_names.begin(), string_names.end(), content);
+            if (it == string_names.end()) {
+                std::cerr << "string " << content << " not found! on line: " << line_count << std::endl;
+                throw 500;
+                return 1;
+            } else {
+                *curr_out << "try {\nstd::filesystem::remove_all(" << content << ");\n} catch (const std::filesystem::filesystem_error& e) {\nstd::cerr << \"Runtime Error!!! fs error at path: \" << e.path1().string();\nstd::cerr << \" Message: \" << e.code().message();\nstd::cerr << \" compiled with \" << version << std::endl;\nreturn 1;\n}\n";
             }
 
         } else {
