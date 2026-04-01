@@ -6,13 +6,15 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
 #include "imguifd/ImGuiFileDialog.h"
+#include "imgui/imgui_stdlib.h"
 
-std::string editor_text = "Bread Developer Suite";
+
 
 bool open_about;
 bool open_credits;
 bool open_load;
 bool open_save;
+bool show_error = false;
 
 std::string file_to_load;
 std::string file_to_save;
@@ -43,7 +45,7 @@ int main() {
     if (!window) return 1;
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
-
+    glfwSetWindowAttrib(window, GLFW_FOCUS_ON_SHOW, GLFW_TRUE);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -52,6 +54,7 @@ int main() {
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     bool first_time = true;
+    static std::string editor_text = "Bread Developer Suite";
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         ImGui_ImplOpenGL3_NewFrame();
@@ -136,17 +139,29 @@ int main() {
             ImGui::EndPopup();
         }
         ImGui::Text("Welcome to the Bread Developer Suite");
+        ImGui::Text("Make sure to start this from the terminal to see the output of the compiler");
         if (compiler == 2) {
             ImGui::Text("Using compiler clang");
         } else if (compiler == 1) {
             ImGui::Text("Using compiler GCC");
         }
         if (ImGui::Button("Compile")) { // todo, implement this
-            std::cout << "to be implemented\n"; 
+            std::ofstream breadfile("/tmp/bread/editor_compile.bread");
+            breadfile << editor_text;
+            breadfile.close();
+            filename = "editor_compile.bread";
+            try {
+                compile_to_cpp("/tmp/bread/editor_compile.bread");
+                show_error = false;
+            }   catch (int e) {
+                show_error = true;
+            }
+            std::cout << "Compiled executable copied to running directory" << std::endl;
         }
+        ImGui::Text("Compilation failed, please see terminal for info.");
         ImGui::Text("Enter your program here:");
         ImVec2 box_size = ImVec2(-1.0f, -1.0f);
-        ImGui::InputTextMultiline("##Editor", (char*)editor_text.c_str(), editor_text.capacity() + 1, box_size, ImGuiInputTextFlags_CallbackResize, string_resize, (void*)&editor_text);
+        ImGui::InputTextMultiline("##Editor", &editor_text, box_size);
         ImGui::End();
         ImGui::Render();
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
