@@ -1,0 +1,39 @@
+print/hello from the bread project
+
+bol/foo/eoo
+print/mathematics test
+int/foo/5
+print/foo
+add/foo/5
+print/foo
+sub/foo/5
+print/foo
+mul/foo/5
+print/foo
+div/foo/5
+print/foo
+mod/foo/3
+print/foo
+print/while loop test
+int/foo/0
+while/foo/less/5
+    print/you should see this 5 times
+    add/foo/1
+endwhile/
+
+shrtct/printshortcut
+    print/im a shortcut!
+endshrtct/
+
+print/if you input yes you will exit with return code 1
+in/userinput
+if/userinput/equals/"yes"
+    printshortcut
+    exit/1
+endif/
+
+print/waiting 5 seconds
+wait/5
+print/waited 5 seconds
+
+
