@@ -18,3 +18,9 @@ To compile your `.bread` program, run the executable with your filename as the a
 fs - Experimental features branch. Code pushed here may not work.
 
 main - The main branch, used when not implementing a major new function. Code pushed here works.
+
+## Third party libraries
+See THIRD-PARTY-LICENSES
+
+## AI notice
+Some AI was used in the making of this project, mainly for small debugging.
