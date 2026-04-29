@@ -1,0 +1,8 @@
+str/todelete/foo
+str/tocreate/bar
+print/DELETING FOLDER foo IN 2 SECONDS!!!
+wait/2
+forcedeletedir/todelete
+print/Success!
+print/Creating folder called bar
+createdir/tocreate
