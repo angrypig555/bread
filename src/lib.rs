@@ -1,7 +1,6 @@
 use std::process::{Command, Stdio};
 use std::panic;
-
-mod logger;
+use log_overflow::{log, log_init, Severity};
 
 /// Finds the current compiler
 /// 
