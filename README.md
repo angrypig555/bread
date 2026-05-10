@@ -19,6 +19,8 @@ fs - Experimental features branch. Code pushed here may not work.
 
 main - The main branch, used when not implementing a major new function. Code pushed here works.
 
+rust - The branch where porting to rust takes place
+
 ## Third party libraries
 See THIRD-PARTY-LICENSES
 
