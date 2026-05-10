@@ -1,6 +1,8 @@
 use std::process::{Command, Stdio};
 use std::panic;
 
+mod logger;
+
 /// Finds the current compiler
 /// 
 /// Returns either
